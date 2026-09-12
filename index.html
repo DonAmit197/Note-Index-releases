@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Note Index</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=Source+Sans+3:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --paper: #EAE3D3;
+    --paper-raised: #F1ECDF;
+    --ink: #2B2823;
+    --ink-soft: #5A5548;
+    --rule-strong: #857758;
+    --stamp: #8C3B2E;
+    --stamp-soft: #6E2E22;
+    --serif: 'Source Serif 4', Georgia, serif;
+    --sans: 'Source Sans 3', -apple-system, 'Segoe UI', sans-serif;
+    --mono: 'JetBrains Mono', 'Consolas', monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    min-height: 100%;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+  }
+  .wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 60px 28px 80px;
+  }
+  header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .mark { font-family: var(--serif); font-size: 34px; color: var(--stamp); }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 34px;
+    margin: 6px 0 8px;
+  }
+  .tagline {
+    color: var(--ink-soft);
+    font-size: 16px;
+    margin: 0;
+  }
+  .version-badge {
+    display: inline-block;
+    margin-top: 14px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--ink-soft);
+    border: 1px solid var(--rule-strong);
+    padding: 3px 10px;
+  }
+
+  .download-card {
+    background: var(--paper-raised);
+    border: 1px solid var(--rule-strong);
+    padding: 32px;
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  #primary-download {
+    display: inline-block;
+    background: var(--stamp);
+    color: var(--paper);
+    text-decoration: none;
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 16px;
+    padding: 14px 32px;
+    border: none;
+    cursor: pointer;
+  }
+  #primary-download:hover { background: var(--stamp-soft); }
+  .detected-os {
+    display: block;
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+
+  .other-downloads {
+    text-align: center;
+  }
+  .other-downloads h2 {
+    font-family: var(--serif);
+    font-size: 16px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--rule-strong);
+    padding-bottom: 6px;
+    margin-bottom: 14px;
+  }
+  #other-downloads {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  #other-downloads li { margin-bottom: 8px; }
+  #other-downloads a {
+    font-family: var(--mono);
+    font-size: 13.5px;
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px dotted var(--rule-strong);
+  }
+  #other-downloads a:hover { color: var(--stamp); }
+
+  .status-msg {
+    text-align: center;
+    color: var(--ink-soft);
+    font-style: italic;
+    font-size: 14px;
+  }
+
+  footer {
+    text-align: center;
+    margin-top: 50px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+  }
+  footer a { color: var(--stamp); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="mark">§</div>
+      <h1>Note Index</h1>
+      <p class="tagline">A book-style index for your physical notes.</p>
+      <span class="version-badge" id="version-label">loading…</span>
+    </header>
+
+    <div class="download-card">
+      <a id="primary-download" href="#" style="display:none;">Download</a>
+      <p class="status-msg" id="status-msg">Finding the latest release…</p>
+      <span class="detected-os" id="detected-os"></span>
+    </div>
+
+    <div class="other-downloads">
+      <h2>All downloads</h2>
+      <ul id="other-downloads"></ul>
+    </div>
+
+    <footer>
+      Source is private. Installers are built and published automatically
+      from tagged releases. Questions or issues? Open one on this repo.
+    </footer>
+  </div>
+
+  <script>
+    // IMPORTANT: replace this with your actual public releases repo path.
+    const REPO = 'DonAmit197/Note-Index-releases';
+
+    function detectPlatform() {
+      const ua = navigator.userAgent;
+      if (ua.includes('Windows')) return 'windows';
+      if (ua.includes('Linux') && !ua.includes('Android')) return 'linux';
+      if (ua.includes('Mac')) return 'mac';
+      return 'unknown';
+    }
+
+    function platformLabel(p) {
+      return { windows: 'Windows', linux: 'Linux', mac: 'macOS' }[p] || 'your OS';
+    }
+
+    function matchesPlatform(filename, platform) {
+      const lower = filename.toLowerCase();
+      if (platform === 'windows') return lower.endsWith('.exe');
+      if (platform === 'linux') return lower.endsWith('.appimage');
+      if (platform === 'mac') return lower.endsWith('.dmg');
+      return false;
+    }
+
+    async function init() {
+      const platform = detectPlatform();
+      document.getElementById('detected-os').textContent =
+        `Detected: ${platformLabel(platform)}`;
+
+      try {
+        const res = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`);
+        if (!res.ok) throw new Error(`GitHub API returned ${res.status}`);
+        const data = await res.json();
+        const assets = data.assets || [];
+
+        document.getElementById('version-label').textContent = data.tag_name || 'unreleased';
+
+        const primary = assets.find((a) => matchesPlatform(a.name, platform));
+        const primaryBtn = document.getElementById('primary-download');
+        const statusMsg = document.getElementById('status-msg');
+
+        if (primary) {
+          primaryBtn.href = primary.browser_download_url;
+          primaryBtn.textContent = `Download for ${platformLabel(platform)}`;
+          primaryBtn.style.display = 'inline-block';
+          statusMsg.style.display = 'none';
+        } else {
+          statusMsg.textContent =
+            assets.length === 0
+              ? 'No release assets found yet.'
+              : `No build found for ${platformLabel(platform)} — see all downloads below.`;
+        }
+
+        const list = document.getElementById('other-downloads');
+        assets.forEach((a) => {
+          const li = document.createElement('li');
+          const link = document.createElement('a');
+          link.href = a.browser_download_url;
+          link.textContent = a.name;
+          li.appendChild(link);
+          list.appendChild(li);
+        });
+      } catch (err) {
+        document.getElementById('status-msg').textContent =
+          'Could not load release info. Check the Releases page directly.';
+        document.getElementById('version-label').textContent = 'error';
+        console.error(err);
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
