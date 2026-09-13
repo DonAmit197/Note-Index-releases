@@ -163,6 +163,21 @@
         text-align: center;
         margin-bottom: 44px;
       }
+      .discussions-link {
+        display: inline-block;
+        font-family: var(--sans);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--stamp);
+        text-decoration: none;
+        border: 1px solid var(--rule-strong);
+        padding: 6px 14px;
+        background: var(--paper-raised);
+      }
+      .discussions-link:hover {
+        background: var(--stamp);
+        color: var(--paper);
+      }
       .mark {
         font-family: var(--serif);
         font-size: 34px;
@@ -424,6 +439,13 @@
   <body>
     <div class="wrap">
       <header>
+        <a
+          class="discussions-link"
+          href="https://github.com/DonAmit197/Note-Index-releases/discussions"
+          target="_blank"
+          rel="noopener"
+          >💬 Join the discussion →</a
+        >
         <div class="mark">§</div>
         <h1>Note Index</h1>
         <p class="tagline">
